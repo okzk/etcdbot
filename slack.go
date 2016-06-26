@@ -21,7 +21,7 @@ type SlackPostPayload struct {
 func (nc *NotifierConfig) notifyToSlack(action, key, value string) (err error) {
 	payload, err := json.Marshal(
 		SlackPostPayload{
-			Text: fmt.Sprintf("A %s event occurred!", action),
+			Text: fmt.Sprintf("A _*%s*_ event occurred!!!", action),
 			Attachments: []SlackPostAttachment{
 				SlackPostAttachment{
 					Title: key,
