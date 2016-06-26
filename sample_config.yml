@@ -1,0 +1,18 @@
+
+etcd:
+  endpoints:
+    - http://localhost:2379
+
+  # watch対象のetcdのkeyのリスト
+  watch_targets:
+    - /watch_target/key01
+    - /watch_target/key02
+
+  # 複数台で動かした際に、同じイベントを通知しないようにロック用keyを作るためのディレクトリ
+  lock_dir: /lock/
+
+slack:
+  incoming_webhook_url: your_webhook_url
+
+  # dry_runモードの場合はpayloadをログに出力するだけ。
+  dry_run: false
