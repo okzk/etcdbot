@@ -18,7 +18,11 @@ Usage
 yamlの設定ファイルを指定して起動してください
 
     etcdbot -cfg config.yml
-    
+
+[seelog](https://github.com/cihub/seelog)のxmlファイルを指定することでログ出力を調整することもできます。
+
+    etcdbot -cfg config.yml -log log.xml
+
 
 License
 -------
