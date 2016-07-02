@@ -16,3 +16,20 @@ slack:
 
   # dry_runモードの場合はpayloadをログに出力するだけ。
   dry_run: false
+
+  # outgoing webhookの設定
+  hook:
+    # outgoing webhook有効にするかどうか
+    enable: true
+
+    # port
+    port: 8080
+
+    # POSTされてくるtoken, 設定してない場合はtokenのチェックを行わない
+    token: YOUR_TOKEN
+
+    # botを仕込んだチャンネル, 設定してない場合はチャンネルのチェックを行わない
+    channel_name: test_channel
+
+    # botの名前
+    torigger_word: "etcdbot:"

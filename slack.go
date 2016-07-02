@@ -8,27 +8,21 @@ import (
 	"net/url"
 )
 
-type SlackPostAttachment struct {
+type SlackAttachment struct {
 	Title string `json:"title,omitempty"`
 	Text  string `json:"text,omitempty"`
 }
 
-type SlackPostPayload struct {
-	Text        string                `json:"text,omitempty"`
-	Attachments []SlackPostAttachment `json:"attachments,omitempty"`
+type SlackMessage struct {
+	Text        string            `json:"text,omitempty"`
+	Attachments []SlackAttachment `json:"attachments,omitempty"`
 }
 
 func (nc *NotifierConfig) notifyToSlack(action, key, value string) (err error) {
-	payload, err := json.Marshal(
-		SlackPostPayload{
-			Text: fmt.Sprintf("A _*%s*_ event occurred!!!", action),
-			Attachments: []SlackPostAttachment{
-				SlackPostAttachment{
-					Title: key,
-					Text:  value,
-				},
-			},
-		})
+	payload, err := createSlackJsonMessage(
+		fmt.Sprintf("A _*%s*_ event occurred!!!", action),
+		SlackAttachment{Title: key, Text: value},
+	)
 	if err != nil {
 		return
 	}
@@ -51,4 +45,11 @@ func (nc *NotifierConfig) notifyToSlack(action, key, value string) (err error) {
 	}
 
 	return
+}
+
+func createSlackJsonMessage(text string, attachments ...SlackAttachment) ([]byte, error) {
+	return json.Marshal(SlackMessage{
+		Text:        text,
+		Attachments: attachments,
+	})
 }

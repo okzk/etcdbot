@@ -15,6 +15,10 @@ func main() {
 	cfg := loadAppConfig()
 	nc := createNotifierConfig(cfg)
 
+	if cfg.Slack.Hook.Enable {
+		go listenAndServe(cfg, nc.keysApi)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	log.Println("[INFO] Start watching keys...")

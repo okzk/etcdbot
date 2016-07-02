@@ -24,6 +24,14 @@ type AppConfig struct {
 	Slack struct {
 		IncomingWebhookUrl string `yaml:"incoming_webhook_url"`
 		DryRun             bool   `yaml:"dry_run"`
+
+		Hook struct {
+			Enable      bool   `yaml:"enable"`
+			Port        int    `yaml:"port"`
+			Token       string `yaml:"token"`
+			ChannelName string `yaml:"channel_name"`
+			TriggerWord string `yaml:"torigger_word"`
+		} `yaml:"hook"`
 	} `yaml:"slack"`
 }
 
