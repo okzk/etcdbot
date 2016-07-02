@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
+	log "github.com/cihub/seelog"
 	"golang.org/x/net/context"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -11,7 +11,14 @@ import (
 )
 
 func main() {
+	defer log.Flush()
 	flag.Parse()
+	err := initLogger()
+	if err != nil {
+		log.Critical(err)
+		return
+	}
+
 	cfg := loadAppConfig()
 	nc := createNotifierConfig(cfg)
 
@@ -21,7 +28,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	log.Println("[INFO] Start watching keys...")
+	log.Info("Start watching keys...")
 	wg := sync.WaitGroup{}
 	for _, key := range cfg.Etcd.WatchTargets {
 		wg.Add(1)
@@ -34,9 +41,9 @@ func main() {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	sig := <-sigCh
-	log.Printf("[INFO] Signal(%v) recieved", sig)
-	log.Println("[INFO] Closing all watchers...")
+	log.Infof("Signal(%v) recieved", sig)
+	log.Info("Closing all watchers...")
 	cancel()
 	wg.Wait()
-	log.Printf("[INFO] Now shutting down.")
+	log.Info("Now shutting down.")
 }

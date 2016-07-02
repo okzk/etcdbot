@@ -2,17 +2,20 @@ package main
 
 import (
 	"flag"
+	log "github.com/cihub/seelog"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"log"
+	"os"
 )
 
 var (
 	appConfigFile string
+	logXmlFile    string
 )
 
 func init() {
 	flag.StringVar(&appConfigFile, "cfg", "", "config yaml file")
+	flag.StringVar(&logXmlFile, "log", "", "log xml file")
 }
 
 type AppConfig struct {
@@ -37,16 +40,31 @@ type AppConfig struct {
 
 func loadAppConfig() *AppConfig {
 	if appConfigFile == "" {
-		log.Fatal("[FATAL] Missing config file")
+		log.Critical("Missing config file")
+		os.Exit(1)
 	}
 	buf, err := ioutil.ReadFile(appConfigFile)
 	if err != nil {
-		log.Fatal("[FATAL] ", err)
+		log.Critical(err)
+		os.Exit(1)
 	}
 	cfg := AppConfig{}
 	err = yaml.Unmarshal(buf, &cfg)
 	if err != nil {
-		log.Fatal("[FATAL] ", err)
+		log.Critical(err)
+		os.Exit(1)
 	}
 	return &cfg
+}
+
+func initLogger() error {
+	if logXmlFile == "" {
+		l, _ := log.LoggerFromConfigAsString(`<seelog type="sync"><outputs formatid="std:debug"><console/></outputs></seelog>`)
+		return log.ReplaceLogger(l)
+	}
+	l, err := log.LoggerFromConfigAsFile(logXmlFile)
+	if err != nil {
+		return err
+	}
+	return log.ReplaceLogger(l)
 }

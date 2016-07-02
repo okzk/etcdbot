@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	log "github.com/cihub/seelog"
 	"github.com/coreos/etcd/client"
 	"golang.org/x/net/context"
-	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -19,14 +20,22 @@ type MyMux struct {
 }
 
 func (m *MyMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" || r.Method == "HEAD" {
-		return
-	}
-	if r.Method != "POST" {
-		w.WriteHeader(http.StatusNotImplemented)
-		return
-	}
+	res := NewResponse(w)
+	defer loggingAccessLog(r, res)
 
+	if r.Method == "GET" || r.Method == "HEAD" {
+		m.ServeGetHead(res, r)
+	} else if r.Method == "POST" {
+		m.ServePost(res, r)
+	} else {
+		res.WriteHeader(http.StatusNotImplemented)
+	}
+}
+
+func (m *MyMux) ServeGetHead(w http.ResponseWriter, r *http.Request) {
+}
+
+func (m *MyMux) ServePost(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	if m.token != "" && m.token != r.PostForm.Get("token") {
@@ -110,7 +119,8 @@ func listenAndServe(config *AppConfig, keysApi client.KeysAPI) {
 		keys:        config.Etcd.WatchTargets,
 	}
 
-	log.Println("[INFO] Start outgoing hook server...")
+	log.Info("Start outgoing hook server...")
 	err := http.ListenAndServe(fmt.Sprintf(":%d", config.Slack.Hook.Port), &mux)
-	log.Fatal("[FATAL] ", err)
+	log.Critical(err)
+	os.Exit(1)
 }

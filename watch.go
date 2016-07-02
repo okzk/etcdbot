@@ -1,9 +1,10 @@
 package main
 
 import (
+	log "github.com/cihub/seelog"
 	"github.com/coreos/etcd/client"
 	"golang.org/x/net/context"
-	"log"
+	"os"
 	"path"
 	"strconv"
 	"time"
@@ -23,7 +24,8 @@ func createNotifierConfig(cfg *AppConfig) *NotifierConfig {
 		HeaderTimeoutPerRequest: time.Second,
 	})
 	if err != nil {
-		log.Fatal("[FATAL] ", err)
+		log.Critical(err)
+		os.Exit(1)
 	}
 
 	return &NotifierConfig{
@@ -35,33 +37,38 @@ func createNotifierConfig(cfg *AppConfig) *NotifierConfig {
 }
 
 func (nc *NotifierConfig) watchAndNotify(ctx context.Context, key string) {
+	log.Debugf("Start watching key:%s", key)
 	watchOp := client.WatcherOptions{}
 	setOp := client.SetOptions{PrevExist: client.PrevNoExist, TTL: time.Minute}
 	watcher := nc.keysApi.Watcher(key, &watchOp)
 	for {
 		res, err := watcher.Next(ctx)
 		if err == context.Canceled {
+			log.Debugf("Stop watching key:%s", key)
 			return
 		}
 		if err != nil {
-			log.Printf("[ERROR] key=%s, err=%v", key, err)
+			log.Errorf("key=%s, err=%v", key, err)
 			time.Sleep(10 * time.Second)
-			return
+			continue
 		}
 		if res.PrevNode != nil && res.Node.Value == res.PrevNode.Value {
-			log.Printf("[DEBUG] Same value is set on %s, skip %s notification", key, res.Action)
+			log.Debugf("Same value is set on %s, skip %s notification", key, res.Action)
 			continue
 		}
 
 		_, err = nc.keysApi.Set(context.Background(), path.Join(nc.lockDir, strconv.FormatUint(res.Index, 10)), "lock", &setOp)
 		if err != nil {
-			log.Printf("[DEBUG] Faii to acquire a lock, skip %s notification. key=%s, err=%v", res.Action, key, err)
+			log.Debugf("Faii to acquire a lock, skip %s notification. key=%s, err=%v", res.Action, key, err)
 			continue
 		}
 
 		err = nc.notifyToSlack(res.Action, res.Node.Key, res.Node.Value)
 		if err != nil {
-			log.Printf("[ERROR] key=%s, err=%v", key, err)
+			log.Errorf("key=%s, err=%v", key, err)
+		} else {
+			log.Debugf("Notified! key=%s", key)
 		}
+
 	}
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seelog type="asyncloop" minlevel="info">
+    <outputs formatid="main">
+        <console/>
+    </outputs>
+    <formats>
+        <format id="main" format="%Date %Time [%LEVEL] %Msg%n"/>
+    </formats>
+</seelog>

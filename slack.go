@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	log "github.com/cihub/seelog"
 	"net/http"
 	"net/url"
 )
@@ -28,7 +28,7 @@ func (nc *NotifierConfig) notifyToSlack(action, key, value string) (err error) {
 	}
 
 	if nc.dryRun {
-		log.Println("[DEBUG] payload: ", string(payload))
+		log.Debug("Dry run mode! payload: ", string(payload))
 		return
 	}
 
