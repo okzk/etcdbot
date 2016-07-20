@@ -43,10 +43,14 @@ func serveBot() {
 	}
 
 	metaDir := os.Getenv("BOT_METADATA_DIR")
-
 	if metaDir == "" {
 		metaDir = "/etcdbot_meta/"
 	}
+	watchBase := os.Getenv("BOT_WATCH_TARGET_BASE")
+	if watchBase == "" {
+		watchBase = "/public/"
+	}
+
 	keysApi := client.NewKeysAPI(c)
 
 	key := os.Getenv("BOT_SLACK_API_KEY")
@@ -66,7 +70,7 @@ func serveBot() {
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
 
-	conf := &Config{rtm: rtm, keysApi: keysApi, metaDir: metaDir}
+	conf := &Config{rtm: rtm, keysApi: keysApi, metaDir: metaDir, watchBase: watchBase}
 
 	log.Info("Starting RTM loop...")
 
