@@ -68,7 +68,12 @@ func serveBot() {
 	id := auth.UserID
 
 	rtm := api.NewRTM()
-	go rtm.ManageConnection()
+	defer rtm.Disconnect()
+	mngCh := make(chan int, 1)
+	go func() {
+		rtm.ManageConnection()
+		close(mngCh)
+	}()
 
 	conf := &Config{rtm: rtm, keysApi: keysApi, metaDir: metaDir, watchBase: watchBase}
 
@@ -80,15 +85,25 @@ func serveBot() {
 		select {
 		case msg := <-rtm.IncomingEvents:
 			switch ev := msg.Data.(type) {
+			case *slack.ConnectedEvent:
+				log.Info("RTM connected...")
 			case *slack.MessageEvent:
 				if strings.HasPrefix(ev.Text, "<@"+id+">") {
 					log.Info("User: ", ev.User, ", Channel: ", ev.Channel, ", Text: ", ev.Text)
 					conf.run(ev.Channel, strings.Fields(ev.Text)[1:])
 				}
 			case *slack.InvalidAuthEvent:
-				log.Errorf("Invalid credentials")
+				log.Error("Invalid credentials")
 				return
+			case *slack.DisconnectedEvent:
+				if ev.Intentional {
+					log.Info("RTM connection intentionally closed.")
+					return
+				}
 			}
+		case <-mngCh:
+			log.Error("ManageConnection goroutine unexpectedly finished!!!")
+			return
 		case sig := <-sigCh:
 			log.Infof("Signal(%v) recieved", sig)
 			return
