@@ -79,11 +79,17 @@ func serveBot() {
 
 	log.Info("Starting RTM loop...")
 
+	hangCheck := time.NewTicker(time.Second)
+	defer hangCheck.Stop()
+	lastIncomingEvent := time.Now() // sentinel
+
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	for {
 		select {
 		case msg := <-rtm.IncomingEvents:
+			lastIncomingEvent = time.Now()
+
 			switch ev := msg.Data.(type) {
 			case *slack.ConnectedEvent:
 				log.Info("RTM connected...")
@@ -99,7 +105,16 @@ func serveBot() {
 				if ev.Intentional {
 					log.Info("RTM connection intentionally closed.")
 					return
+				} else {
+					log.Error("RTM connection unexpectedly closed.")
 				}
+			}
+		case <-hangCheck.C:
+			if lastIncomingEvent.Add(61 * time.Second).Before(time.Now()) {
+				// PING/PONG event should create a LatencyReport IncomingEvent at 30 second-interval.
+				// So it may be hanged up.
+				log.Critical("RTM connection may be hanged up.")
+				return
 			}
 		case <-mngCh:
 			log.Error("ManageConnection goroutine unexpectedly finished!!!")
