@@ -2,11 +2,11 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	log "github.com/cihub/seelog"
 	"github.com/coreos/etcd/client"
 	"github.com/nlopes/slack"
-	"golang.org/x/net/context"
 	"path"
 	"regexp"
 	"strings"

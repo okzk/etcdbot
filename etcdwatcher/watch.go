@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	log "github.com/cihub/seelog"
 	"github.com/coreos/etcd/client"
-	"golang.org/x/net/context"
 	"os"
 	"path"
 	"strconv"
